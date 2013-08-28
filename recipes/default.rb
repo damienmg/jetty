@@ -22,6 +22,20 @@ include_recipe 'java'
 require 'fileutils'
 
 ################################################################################
+# SSL Part to ensure correct node variable settings
+if node[:jetty][:ssl_pass]
+  pass = node[:jetty][:ssl_pass]
+else
+  pool =  [('a'..'z'),('A'..'Z')].map{|i| i.to_a}.flatten
+  pass =  (0...50).map{ pool[rand(pool.length)] }.join
+end
+node.set[:jetty][:ssl_pass] = pass
+
+# Set obfuscated pass
+node.set[:jetty][:ssl_obfpass] = `java -cp #{node[:jetty][:home]}/lib/jetty-util-#{node[:jetty][:version]}.jar org.eclipse.jetty.util.security.Password '#{pass}' 2>&1  | grep '^OBF:'`.strip
+
+
+################################################################################
 # Guess node['jetty']['contexts'] attribute if not set based on the given jetty
 #  version in node['jetty']['version']
 #  Reason why: webapps contexts are in /contexts in Jetty 7/8
