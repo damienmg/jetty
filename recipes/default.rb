@@ -268,3 +268,66 @@ template File.join(node['jetty']['home'], 'resources/jetty-logging.properties') 
   notifies :restart, "service[jetty]"
   action :create
 end
+
+
+################################################################################
+# HTTPS
+
+if node['jetty']['ssl_port'] and node['jetty']['ssl_subject']
+  include_recipe "openssl"
+
+  conf_dir = "#{node[:jetty][:home]}/etc"
+  jetty_home = node["jetty"]["home"]
+  ssl_subject = node['jetty']['ssl_subject']
+  prefix = "#{conf_dir}/ssl"
+
+  execute "jetty-load-key" do
+    command "rm -f #{conf_dir}/keystore; keytool -importkeystore -srckeystore #{prefix}.pkcs12 -srcstoretype PKCS12 -destkeystore #{conf_dir}/keystore -srcstorepass '#{pass}' -deststorepass '#{pass}'"
+    cwd conf_dir
+    user node['jetty']['user']
+    group node['jetty']['group']
+    not_if { not ::File.exists?("#{prefix}.pkcs12") }
+    action :nothing
+    notifies :restart, "service[jetty]", :delayed
+  end
+
+  execute "jetty-pkcs12" do
+    command "openssl pkcs12 -inkey #{prefix}.key -in #{prefix}.crt -export -out #{prefix}.pkcs12 -passout 'pass:#{pass}'  -passin 'pass:#{pass}'"
+    cwd conf_dir
+    user node['jetty']['user']
+    group node['jetty']['group']
+    not_if { ::File.exists?("#{prefix}.pkcs12") or not ::File.exists?("#{prefix}.crt") }
+    action :nothing
+    notifies :run, "execute[jetty-load-key]", :immediately
+  end
+
+  execute "jetty-csr" do
+    command "openssl req -new -key #{prefix}.key -out #{prefix}.csr -subj '#{ssl_subject}' -multivalue-rdn -passin 'pass:#{pass}' -passout 'pass:#{pass}'"
+    cwd conf_dir
+    user node['jetty']['user']
+    group node['jetty']['group']
+    not_if { ::File.exists?("#{prefix}.csr") or not ::File.exists?("#{prefix}.key") }
+    action :nothing
+    notifies :run, "execute[jetty-pkcs12]", :immediately
+  end
+
+  execute "jetty-cert" do
+    command "openssl req -new -x509 -key #{prefix}.key -out #{prefix}.crt -subj '#{ssl_subject}' -multivalue-rdn  -passin 'pass:#{pass}' -passout 'pass:#{pass}'"
+    cwd conf_dir
+    user node['jetty']['user']
+    group node['jetty']['group']
+    not_if { ::File.exists?("#{prefix}.crt") or not ::File.exists?("#{prefix}.key") }
+    action :nothing
+    notifies :run, "execute[jetty-csr]", :immediately
+  end
+
+  execute "jetty-key" do
+    command "openssl genrsa -out #{prefix}.key -des3 -passout 'pass:#{pass}'"
+    cwd conf_dir
+    user node['jetty']['user']
+    group node['jetty']['group']
+    not_if { ::File.exists?("#{prefix}.key") }
+    notifies :run, "execute[jetty-cert]", :immediately
+    action :run
+  end
+end
