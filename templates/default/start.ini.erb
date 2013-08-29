@@ -19,7 +19,6 @@
 -Djetty.truststore=etc/keystore
 -Djetty.truststore.password=<%= node['jetty']['ssl_obfpass'] %>
 -Djetty.secure.port=<%= node['jetty']['ssl_port'] %>
--Djetty.https.port=<%= node['jetty']['ssl_port'] %>
 -Djetty.https.port=<%=node['jetty']['ssl_port']%>
 --exec
 etc/jetty-ssl.xml
