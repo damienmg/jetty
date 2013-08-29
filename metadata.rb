@@ -9,4 +9,4 @@ supports 'ubuntu', ">= 12.04"
 
 depends "java"
 depends "openssl"
-
+depends "iptables"

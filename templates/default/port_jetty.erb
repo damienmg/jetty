@@ -1,0 +1,6 @@
+# Jetty HTTP
+-A FWR -p tcp -m tcp --dport <%=node['jetty']['port'] %> -j ACCEPT
+<% if node['jetty']['ssl_port'] and node['jetty']['ssl_subject'] %>
+# Jetty HTTPS
+-A FWR -p tcp -m tcp --dport <%=node['jetty']['ssl_port'] %> -j ACCEPT
+<% end %>
