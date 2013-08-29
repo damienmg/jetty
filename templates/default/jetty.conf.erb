@@ -13,6 +13,11 @@
 <% for @conf in node['jetty']['add_confs'] %>
 <%= @conf %>
 <% end %>
+<% if node['jetty']['port'] < 1024 or (node['jetty']['ssl_port'] and node['jetty']['ssl_port'] < 1024) %>
+-Djetty.startServerAsPrivileged=true
+-Djetty.username=<%= node[:jetty][:user] %>
+-Djetty.group=<%= node[:jetty][:group] %>
+<% end %>
 <% if node['jetty']['ssl_port'] and node['jetty']['ssl_subject'] %>
 -Djetty.keystore=etc/keystore
 -Djetty.keystore.password=<%= node['jetty']['ssl_obfpass'] %>
@@ -25,4 +30,8 @@
 --exec
 etc/jetty-ssl.xml
 etc/jetty-https.xml
+<% end %>
+<% if node['jetty']['port'] < 1024 or (node['jetty']['ssl_port'] and node['jetty']['ssl_port'] < 1024) %>
+OPTIONS=setuid
+etc/jetty-setuid.xml
 <% end %>

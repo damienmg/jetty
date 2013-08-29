@@ -1,6 +1,8 @@
 export JAVA_HOME=<%= node.java.java_home %>
 export JETTY_HOME=<%= node.jetty.home %>
+<% if node['jetty']['port'] > 1024 and (not node['jetty']['ssl_port'] or node['jetty']['ssl_port'] > 1024) %>
 export JETTY_USER=<%= node.jetty.user %>
+<% end %>
 export JETTY_PORT=<%= node.jetty.port %>
 export JETTY_ARGS="<%= node.jetty.args.join(' ') %>"
 export JAVA_OPTIONS="<%= node.jetty.java_options.kind_of?(Array) ?  node.jetty.java_options.join(' ') : node.jetty.java_options %>"
