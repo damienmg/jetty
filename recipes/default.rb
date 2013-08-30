@@ -31,10 +31,6 @@ else
 end
 node.set[:jetty][:ssl_pass] = pass
 
-# Set obfuscated pass
-node.set[:jetty][:ssl_obfpass] = `java -cp #{node[:jetty][:home]}/lib/jetty-util-#{node[:jetty][:version]}.jar org.eclipse.jetty.util.security.Password '#{pass}' 2>&1  | grep '^OBF:'`.strip
-
-
 ################################################################################
 # Guess node['jetty']['contexts'] attribute if not set based on the given jetty
 #  version in node['jetty']['version']
@@ -113,6 +109,19 @@ ruby_block 'Extract Jetty' do
   end
 end
 
+ruby_block 'Set OBF password' do
+  block do
+    # Set obfuscated pass
+    node.set[:jetty][:ssl_obfpass] = `java -cp #{node[:jetty][:extracted]}/lib/jetty-util-#{node[:jetty][:version]}.jar org.eclipse.jetty.util.security.Password '#{pass}' 2>&1  | grep '^OBF:'`.strip
+    Chef::Log.info "OBF password is #{node[:jetty][:ssl_obfpass]}"
+  end
+
+  action :create
+
+  only_if do
+    File.exists?(node['jetty']['extracted'])
+  end
+end
 
 ruby_block 'Copy Jetty lib files' do
   block do
@@ -127,8 +136,8 @@ ruby_block 'Copy Jetty lib files' do
   only_if do
     Dir[File.join(node['jetty']['home'], 'lib', '*')].empty?
   end
-end
 
+end
 
 ruby_block 'Copy Jetty start.jar' do
   block do
