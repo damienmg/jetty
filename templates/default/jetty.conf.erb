@@ -10,15 +10,13 @@
 # arguments will be in addition to those found in the
 # start.ini file
 # =======================================================
-<% for @conf in node['jetty']['add_confs'] %>
-<%= @conf %>
-<% end %>
-<% if node['jetty']['port'] < 1024 or (node['jetty']['ssl_port'] and node['jetty']['ssl_port'] < 1024) %>
+<% if not node['jetty']['start_ini']['custom'] %>
+<%   if node['jetty']['port'] < 1024 or (node['jetty']['ssl_port'] and node['jetty']['ssl_port'] < 1024) %>
 -Djetty.startServerAsPrivileged=true
 -Djetty.username=<%= node[:jetty][:user] %>
 -Djetty.group=<%= node[:jetty][:group] %>
-<% end %>
-<% if node['jetty']['ssl_port'] and node['jetty']['ssl_subject'] %>
+<%   end %>
+<%   if node['jetty']['ssl_port'] and node['jetty']['ssl_subject'] %>
 -Djetty.keystore=etc/keystore
 -Djetty.keystore.password=<%= node['jetty']['ssl_obfpass'] %>
 -Djetty.keymanager.password=<%= node['jetty']['ssl_obfpass'] %>
@@ -26,11 +24,17 @@
 -Djetty.truststore.password=<%= node['jetty']['ssl_obfpass'] %>
 -Djetty.secure.port=<%= node['jetty']['ssl_port'] %>
 -Djetty.https.port=<%= node['jetty']['ssl_port'] %>
+<%   end %>
 --exec
-etc/jetty-ssl.xml
-etc/jetty-https.xml
-<% end %>
-<% if node['jetty']['port'] < 1024 or (node['jetty']['ssl_port'] and node['jetty']['ssl_port'] < 1024) %>
+<%   if node['jetty']['port'] < 1024 or (node['jetty']['ssl_port'] and node['jetty']['ssl_port'] < 1024) %>
 OPTIONS=setuid
 etc/jetty-setuid.xml
+<%   end %>
+<%   if node['jetty']['ssl_port'] and node['jetty']['ssl_subject'] %>
+etc/jetty-ssl.xml
+etc/jetty-https.xml
+<%   end %>
+<% end %>
+<% for @conf in node['jetty']['add_confs'] %>
+<%= @conf %>
 <% end %>

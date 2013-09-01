@@ -4,27 +4,27 @@
 # arguments # of a call to:
 #    java -jar start.jar [arg...]
 #===========================================================
+--exec
+<% if node['jetty']['port'] < 1024 or (node['jetty']['ssl_port'] and node['jetty']['ssl_port'] < 1024) %>
+# Set UID
+jetty.startServerAsPrivileged=true
+jetty.username=<%= node[:jetty][:user] %>
+jetty.group=<%= node[:jetty][:group] %>
+OPTIONS=setuid
+etc/jetty-setuid.xml
+<% end %>
 <% for @option in node['jetty']['start_ini']['content'] %>
 <%= @option %>
 <% end %>
-<% if node['jetty']['port'] < 1024 or (node['jetty']['ssl_port'] and node['jetty']['ssl_port'] < 1024) %>
--Djetty.startServerAsPrivileged=true
--Djetty.username=<%= node[:jetty][:user] %>
--Djetty.group=<%= node[:jetty][:group] %>
-<% end %>
 <% if node['jetty']['ssl_port'] and node['jetty']['ssl_subject'] %>
--Djetty.keystore=etc/keystore
--Djetty.keystore.password=<%= node['jetty']['ssl_obfpass'] %>
--Djetty.keymanager.password=<%= node['jetty']['ssl_obfpass'] %>
--Djetty.truststore=etc/keystore
--Djetty.truststore.password=<%= node['jetty']['ssl_obfpass'] %>
--Djetty.secure.port=<%= node['jetty']['ssl_port'] %>
--Djetty.https.port=<%=node['jetty']['ssl_port']%>
---exec
+# HTTPS
+jetty.keystore=etc/keystore
+jetty.keystore.password=<%= node['jetty']['ssl_obfpass'] %>
+jetty.keymanager.password=<%= node['jetty']['ssl_obfpass'] %>
+jetty.truststore=etc/keystore
+jetty.truststore.password=<%= node['jetty']['ssl_obfpass'] %>
+jetty.secure.port=<%= node['jetty']['ssl_port'] %>
+jetty.https.port=<%=node['jetty']['ssl_port']%>
 etc/jetty-ssl.xml
 etc/jetty-https.xml
-<% end %>
-<% if node['jetty']['port'] < 1024 or (node['jetty']['ssl_port'] and node['jetty']['ssl_port'] < 1024) %>
-OPTIONS=setuid
-etc/jetty-setuid.xml
 <% end %>
