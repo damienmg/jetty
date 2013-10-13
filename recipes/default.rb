@@ -25,9 +25,7 @@ require 'fileutils'
 # SSL Part to ensure correct node variable settings
 if node[:jetty][:ssl_cert] then
   ssl_cert = data_bag_item('certificates', node[:jetty][:ssl_cert])
-  log "found ssl_cert for #{node[:jetty][:ssl_cert]}: #{ssl_cert['id']}"
   if ssl_cert['pass'] then
-    log "ssl_cert[pass] = #{ssl_cert['pass']}"
     node.set[:jetty][:ssl_pass] = ssl_cert['pass']
   end
 end
