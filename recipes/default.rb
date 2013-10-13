@@ -23,6 +23,14 @@ require 'fileutils'
 
 ################################################################################
 # SSL Part to ensure correct node variable settings
+if node[:jetty][:ssl_cert] then
+  ssl_cert = data_bag_item('certificates', node[:jetty][:ssl_cert])
+  log "found ssl_cert for #{node[:jetty][:ssl_cert]}: #{ssl_cert['id']}"
+  if ssl_cert['pass'] then
+    log "ssl_cert[pass] = #{ssl_cert['pass']}"
+    node.set[:jetty][:ssl_pass] = ssl_cert['pass']
+  end
+end
 if node[:jetty][:ssl_pass]
   pass = node[:jetty][:ssl_pass]
 else
@@ -282,7 +290,7 @@ end
 ################################################################################
 # HTTPS
 
-if node['jetty']['ssl_port'] and node['jetty']['ssl_subject']
+if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or node['jetty']['ssl_cert'])
   include_recipe "openssl"
 
   conf_dir = "#{node[:jetty][:home]}/etc"
@@ -299,44 +307,54 @@ if node['jetty']['ssl_port'] and node['jetty']['ssl_subject']
     action :nothing
     notifies :restart, "service[jetty]", :delayed
   end
-
   execute "jetty-pkcs12" do
     command "openssl pkcs12 -inkey #{prefix}.key -in #{prefix}.crt -export -out #{prefix}.pkcs12 -passout 'pass:#{pass}'  -passin 'pass:#{pass}'"
     cwd conf_dir
     user node['jetty']['user']
     group node['jetty']['group']
-    not_if { ::File.exists?("#{prefix}.pkcs12") or not ::File.exists?("#{prefix}.crt") }
+    not_if { not ::File.exists?("#{prefix}.crt") }
     action :nothing
     notifies :run, "execute[jetty-load-key]", :immediately
-  end
+  end  
 
-  execute "jetty-csr" do
-    command "openssl req -new -key #{prefix}.key -out #{prefix}.csr -subj '#{ssl_subject}' -multivalue-rdn -passin 'pass:#{pass}' -passout 'pass:#{pass}'"
-    cwd conf_dir
-    user node['jetty']['user']
-    group node['jetty']['group']
-    not_if { ::File.exists?("#{prefix}.csr") or not ::File.exists?("#{prefix}.key") }
-    action :nothing
-    notifies :run, "execute[jetty-pkcs12]", :immediately
-  end
-
-  execute "jetty-cert" do
-    command "openssl req -new -x509 -key #{prefix}.key -out #{prefix}.crt -subj '#{ssl_subject}' -multivalue-rdn  -passin 'pass:#{pass}' -passout 'pass:#{pass}'"
-    cwd conf_dir
-    user node['jetty']['user']
-    group node['jetty']['group']
-    not_if { ::File.exists?("#{prefix}.crt") or not ::File.exists?("#{prefix}.key") }
-    action :nothing
-    notifies :run, "execute[jetty-csr]", :immediately
-  end
-
-  execute "jetty-key" do
-    command "openssl genrsa -out #{prefix}.key -des3 -passout 'pass:#{pass}'"
-    cwd conf_dir
-    user node['jetty']['user']
-    group node['jetty']['group']
-    not_if { ::File.exists?("#{prefix}.key") }
-    notifies :run, "execute[jetty-cert]", :immediately
-    action :run
+  if ssl_cert then
+    # Get certificates from the data bag
+    file "#{prefix}.key" do
+      action :create
+      content ssl_cert['key']
+      user node['jetty']['user']
+      group node['jetty']['group']
+      mode "0600"
+      notifies :run, "execute[jetty-pkcs12]", :delayed
+    end
+    file "#{prefix}.crt" do
+      action :create
+      content ssl_cert['certificate']
+      user node['jetty']['user']
+      group node['jetty']['group']
+      mode "0600"
+      notifies :run, "execute[jetty-pkcs12]", :delayed
+    end
+  else
+    # Generate a certificate
+    execute "jetty-cert" do
+      command "openssl req -new -x509 -key #{prefix}.key -out #{prefix}.crt -subj '#{ssl_subject}' -multivalue-rdn  -passin 'pass:#{pass}' -passout 'pass:#{pass}'"
+      cwd conf_dir
+      user node['jetty']['user']
+      group node['jetty']['group']
+      not_if { ::File.exists?("#{prefix}.crt") or not ::File.exists?("#{prefix}.key") }
+      action :nothing
+      notifies :run, "execute[jetty-pkcs12]", :immediately
+    end
+    
+    execute "jetty-key" do
+      command "openssl genrsa -out #{prefix}.key -des3 -passout 'pass:#{pass}'"
+      cwd conf_dir
+      user node['jetty']['user']
+      group node['jetty']['group']
+      not_if { ::File.exists?("#{prefix}.key") }
+      notifies :run, "execute[jetty-cert]", :immediately
+      action :run
+    end
   end
 end
