@@ -247,6 +247,14 @@ template "/etc/jetty/jetty.conf" do
   notifies :restart, "service[jetty]"
 end
 
+cookbook_file "/etc/jetty/jetty-ssl.xml" do
+  source "jetty-ssl.xml"
+  mode   '644'
+  owner node['jetty']['user']
+  group node['jetty']['group']
+  notifies :restart, "service[jetty]"
+end
+
 if node['jetty']['start_ini']['custom']
   template "#{node['jetty']['home']}/start.ini" do
     source "start.ini.erb"
