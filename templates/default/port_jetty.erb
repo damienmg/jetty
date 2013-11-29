@@ -9,22 +9,3 @@
 # Jetty HTTPS
 -A FWR -p tcp -m tcp --dport <%=node['jetty']['ssl_port'] %> -j ACCEPT
 <% end %>
-<% if node['jetty']['port_forward'] or node['jetty']['ssl_port_forward'] %>
-
-*nat
-# Jetty Port forwarding
-<%   if node['jetty']['port_forward'] %>
-# Jetty HTTP port forward
--A PREROUTING -p tcp --dport <%= node['jetty']['port_forward'] %> -j REDIRECT --to-port <%=node['jetty']['port'] %>
--A OUTPUT -p tcp -d <%= node['fqdn'] %> --dport <%= node['jetty']['port_forward'] %> -j REDIRECT --to-port <%=node['jetty']['port'] %>
--A OUTPUT -p tcp -d <%= node['ipaddress'] %> --dport <%= node['jetty']['port_forward'] %> -j REDIRECT --to-port <%=node['jetty']['port'] %>
--A OUTPUT -p tcp -d localhost --dport <%= node['jetty']['port_forward'] %> -j REDIRECT --to-port <%=node['jetty']['port'] %>
-<%   end %>
-<%   if node['jetty']['ssl_port_forward'] %>
-# Jetty HTTPS port forward
--A PREROUTING -p tcp --dport <%= node['jetty']['ssl_port_forward'] %> -j REDIRECT --to-port <%=node['jetty']['ssl_port'] %>
--A OUTPUT -p tcp -d <%= node['ipaddress'] %> --dport <%= node['jetty']['ssl_port_forward'] %> -j REDIRECT --to-port <%=node['jetty']['ssl_port'] %>
--A OUTPUT -p tcp -d <%= node['fqdn'] %>  --dport <%= node['jetty']['ssl_port_forward'] %> -j REDIRECT --to-port <%=node['jetty']['ssl_port'] %>
--A OUTPUT -p tcp -d localhost --dport <%= node['jetty']['ssl_port_forward'] %> -j REDIRECT --to-port <%=node['jetty']['ssl_port'] %>
-<%   end %>
-<% end %>

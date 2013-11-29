@@ -20,3 +20,25 @@
 include_recipe "iptables"
 
 iptables_rule "port_jetty"
+
+package "authbind" do
+  action :install
+end
+
+if node['jetty']['port'] <= 1024 then
+  file "/etc/authbind/byport/#{node['jetty']['port']}" do
+    user node['jetty']['user']
+    group node['jetty']['group']
+    mode "0700"
+    action :touch
+  end
+end
+if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or node['jetty']['ssl_cert']) and node['jetty']['ssl_port'] <= 1024 then
+  # Install authbind
+  file "/etc/authbind/byport/#{node['jetty']['ssl_port']}" do
+    user node['jetty']['user']
+    group node['jetty']['group']
+    mode "0700"
+    action :touch
+  end
+end
