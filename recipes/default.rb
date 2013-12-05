@@ -311,7 +311,7 @@ if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or node['jetty'][
   prefix = "#{conf_dir}/ssl"
 
   execute "jetty-load-key" do
-    command "rm -f #{conf_dir}/keystore; keytool -importkeystore -srckeystore #{prefix}.pkcs12 -srcstoretype PKCS12 -destkeystore #{conf_dir}/keystore -srcstorepass '#{pass}' -deststorepass '#{pass}'"
+    command "rm -f #{conf_dir}/keystore; keytool -J-Xmx2m -importkeystore -srckeystore #{prefix}.pkcs12 -srcstoretype PKCS12 -destkeystore #{conf_dir}/keystore -srcstorepass '#{pass}' -deststorepass '#{pass}'"
     cwd conf_dir
     user node['jetty']['user']
     group node['jetty']['group']
