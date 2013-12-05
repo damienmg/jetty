@@ -118,7 +118,13 @@ end
 ruby_block 'Set OBF password' do
   block do
     # Set obfuscated pass
-    node.set[:jetty][:ssl_obfpass] = `java -cp #{node[:jetty][:extracted]}/lib/jetty-util-#{node[:jetty][:version]}.jar org.eclipse.jetty.util.security.Password '#{pass}' 2>&1  | grep '^OBF:'`.strip
+    Chef::Log.debug "Executing `java -Xmx2m -cp #{node[:jetty][:extracted]}/lib/jetty-util-#{node[:jetty][:version]}.jar org.eclipse.jetty.util.security.Password '#{pass}' 2>&1`"
+    obf_output = `java -Xmx2m -cp #{node[:jetty][:extracted]}/lib/jetty-util-#{node[:jetty][:version]}.jar org.eclipse.jetty.util.security.Password '#{pass}' 2>&1`
+    Chef::Log.debug "Output of java is #{obf_output}"
+    obf_match = /^(?<OBF>OBF:.*)$/.match(obf_output);
+    if obf_match then
+      node.set[:jetty][:ssl_obfpass] = obf_match['OBF'].strip
+    end
     Chef::Log.info "OBF password is #{node[:jetty][:ssl_obfpass]}"
   end
 
