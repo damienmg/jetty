@@ -4,7 +4,6 @@
 # arguments # of a call to:
 #    java -jar start.jar [arg...]
 #===========================================================
---exec
 <% for @option in node['jetty']['start_ini']['content'] %>
 <%= @option %>
 <% end %>

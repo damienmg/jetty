@@ -3,5 +3,11 @@ export JETTY_HOME=<%= node.jetty.home %>
 export JETTY_USER=<%= node.jetty.user %>
 export JETTY_PORT=<%= node.jetty.port %>
 export JETTY_ARGS="<%= node.jetty.args.join(' ') %>"
+<% if node.jetty.port < 1024 or (node.jetty.ssl_port and node.jetty.port < 1024) %>
+# Hack to use authbind on JAVA
+export JAVA="/usr/bin/authbind"
+export JAVA_OPTIONS="/usr/bin/java <%= node.jetty.java_options.kind_of?(Array) ?  node.jetty.java_options.join(' ') : node.jetty.java_options %>"
+<% else %>
 export JAVA_OPTIONS="<%= node.jetty.java_options.kind_of?(Array) ?  node.jetty.java_options.join(' ') : node.jetty.java_options %>"
+<% end %>
 export JETTY_LOGS="<%= node.jetty.logs %>"
