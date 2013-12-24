@@ -78,11 +78,18 @@ end
 # Create few directories for jetty
 
 
-[node['jetty']['home'], node['jetty']['contexts'], node['jetty']['webapps'], "#{node['jetty']['home']}/lib","#{node['jetty']['home']}/resources"].each do |d|
+[node['jetty']['home'], "#{node['jetty']['home']}/lib","#{node['jetty']['home']}/resources"].each do |d|
   directory d do
     owner node['jetty']['user']
     group node['jetty']['group']
     mode  '755'
+  end
+end
+[node['jetty']['contexts'], node['jetty']['webapps']].each do |d|
+  directory d do
+    owner node['jetty']['user']
+    group node['jetty']['group']
+    mode  '775'
   end
 end
 
