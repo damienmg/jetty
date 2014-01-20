@@ -354,6 +354,12 @@ if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or node['jetty'][
 
   if ssl_cert then
     # Get certificates from the data bag
+    crt = ssl_cert['certificate']
+    if ssl_cert['chain'] then
+      ssl_cert['chain'].each do |c|
+        crt = "#{crt}\n#{c}"
+      end
+    end
     file "#{prefix}.key" do
       action :create
       content ssl_cert['key']
@@ -364,7 +370,7 @@ if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or node['jetty'][
     end
     file "#{prefix}.crt" do
       action :create
-      content ssl_cert['certificate']
+      content crt
       user node['jetty']['user']
       group node['jetty']['group']
       mode "0600"
