@@ -29,8 +29,9 @@ if node[:jetty][:ssl_cert] then
     node.set[:jetty][:ssl_pass] = ssl_cert['pass']
   end
 else
-  ssl_cert = search(:certificates, 'fqdn:#{node[fqdn]}').first
-  if ssl_cert['pass'] then
+  fqdn_search = "fqdn:#{node[:fqdn]}"
+  ssl_cert = search(:certificates, fqdn_search).first
+  if ssl_cert != nil and ssl_cert['pass'] then
     node.set[:jetty][:ssl_pass] = ssl_cert['pass']
   end
 end
