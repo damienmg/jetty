@@ -28,6 +28,11 @@ if node[:jetty][:ssl_cert] then
   if ssl_cert['pass'] then
     node.set[:jetty][:ssl_pass] = ssl_cert['pass']
   end
+else
+  ssl_cert = search(:certificates, 'fqdn:#{node[fqdn]}').first
+  if ssl_cert['pass'] then
+    node.set[:jetty][:ssl_pass] = ssl_cert['pass']
+  end
 end
 if node[:jetty][:ssl_pass]
   pass = node[:jetty][:ssl_pass]
@@ -325,7 +330,7 @@ end
 ################################################################################
 # HTTPS
 
-if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or node['jetty']['ssl_cert'])
+if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or ssl_cert)
   include_recipe "openssl"
 
   conf_dir = "#{node[:jetty][:home]}/etc"
