@@ -270,6 +270,7 @@ template '/etc/default/jetty' do
   owner node['jetty']['user']
   group node['jetty']['group']
   notifies :restart, "service[jetty]"
+  variables({"ssl_cert" => ssl_cert})
   action :create
 end
 
@@ -279,6 +280,7 @@ template "/etc/jetty/jetty.conf" do
   mode   '644'
   owner node['jetty']['user']
   group node['jetty']['group']
+  variables({"ssl_cert" => ssl_cert})
   notifies :restart, "service[jetty]"
 end
 
@@ -296,6 +298,7 @@ if node['jetty']['start_ini']['custom']
     mode   '644'
     owner node['jetty']['user']
     group node['jetty']['group']
+    variables({"ssl_cert" => ssl_cert})
     notifies :restart, "service[jetty]"
   end
 else

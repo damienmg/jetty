@@ -11,7 +11,7 @@
 # start.ini file
 # =======================================================
 <% if not node['jetty']['start_ini']['custom'] %>
-<%   if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or node['jetty']['ssl_cert']) %>
+<%   if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or @ssl_cert) %>
 -Djetty.keystore=etc/keystore
 -Djetty.keystore.password=<%= node['jetty']['ssl_obfpass'] %>
 -Djetty.keymanager.password=<%= node['jetty']['ssl_obfpass'] %>
@@ -20,7 +20,7 @@
 -Djetty.secure.port=<%= node['jetty']['ssl_port'] %>
 -Djetty.https.port=<%= node['jetty']['ssl_port'] %>
 <%   end %>
-<%   if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or node['jetty']['ssl_cert']) %>
+<%   if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or @ssl_cert) %>
 etc/jetty-ssl.xml
 etc/jetty-https.xml
 <%   end %>

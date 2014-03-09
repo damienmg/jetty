@@ -7,7 +7,7 @@
 <% for @option in node['jetty']['start_ini']['content'] %>
 <%= @option %>
 <% end %>
-<% if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or node['jetty']['ssl_cert']) %>
+<% if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or @ssl_cert) %>
 # HTTPS
 jetty.keystore=etc/keystore
 jetty.keystore.password=<%= node['jetty']['ssl_obfpass'] %>

@@ -19,7 +19,16 @@
 
 include_recipe "iptables"
 
-iptables_rule "port_jetty"
+if node[:jetty][:ssl_cert] then
+  ssl_cert = data_bag_item('certificates', node[:jetty][:ssl_cert])
+else
+  fqdn_search = "fqdn:#{node[:fqdn]}"
+  ssl_cert = search(:certificates, fqdn_search).first
+end
+
+iptables_rule "port_jetty" do 
+  variables({"ssl_cert" => ssl_cert})
+end
 
 package "authbind" do
   action :install
@@ -33,7 +42,7 @@ if node['jetty']['port'] <= 1024 then
     action :touch
   end
 end
-if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or node['jetty']['ssl_cert']) and node['jetty']['ssl_port'] <= 1024 then
+if node['jetty']['ssl_port'] and (node['jetty']['ssl_subject'] or ssl_cert) and node['jetty']['ssl_port'] <= 1024 then
   # Install authbind
   file "/etc/authbind/byport/#{node['jetty']['ssl_port']}" do
     user node['jetty']['user']
